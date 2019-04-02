@@ -1,50 +1,66 @@
 package com.panchen.easyPaxos.core;
 
-import java.util.List;
+import java.net.InetSocketAddress;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import com.google.common.net.InetAddresses;
 import com.panchen.easyPaxos.transport.NettyTransport;
+
+import io.netty.channel.ChannelHandlerContext;
 
 public abstract class Node {
 
-    private static State state = State.WATING;
-    private NettyTransport nettyTransport;
-    private InetAddresses inetAddresses;
-    private ConcurrentLinkedQueue<PaxosMessage> paxosMessageQueue = new ConcurrentLinkedQueue<PaxosMessage>();
+	public static State state = State.WATING;
+	public NettyTransport nettyTransport;
+	public InetSocketAddress inetSocketAddress;
+	private ConcurrentLinkedQueue<Proposal> proposalQueue = new ConcurrentLinkedQueue<Proposal>();
+	protected ThreadPoolExecutor executor;
+	private static final int DEFALUT_COREPOOLSIZE = 1;
 
+	public enum State {
+		WATING, PREPARE, RESPONSE
+	}
 
-    private List<Acceptor> choiceAcceptors() {
-        return null;
+	private class recMessageThread extends Thread {
 
-    }
+		@Override
+		public void run() {
+			while (com.panchen.easyPaxos.core.Node.State.WATING != state) {
+				if (null != proposalQueue.peek()) {
+				}
+			}
+		}
 
-    private List<Learner> choiceLearners() {
-        return null;
+	}
 
-    }
+	public NettyTransport createNettyTransport() {
+		try {
+			this.nettyTransport = new NettyTransport(inetSocketAddress);
+			return nettyTransport;
+		} catch (InterruptedException e) {
+			throw new RuntimeException("createNettyTransport error : " + e);
+		}
+	}
 
-    private List<Proposer> choiceProposers() {
-        return null;
+	public abstract void handle(ChannelHandlerContext ctx, Object msg);
 
-    }
+	public void initThreadPoolExecutor(int corePoolSize) {
+		if (0 >= corePoolSize) {
+			executor = new ThreadPoolExecutor(DEFALUT_COREPOOLSIZE, DEFALUT_COREPOOLSIZE * 2, 30, TimeUnit.MINUTES,
+					new ArrayBlockingQueue<Runnable>(10));
+		}
+		executor = new ThreadPoolExecutor(corePoolSize, corePoolSize * 2, 30, TimeUnit.MINUTES,
+				new ArrayBlockingQueue<Runnable>(10));
+	}
 
-    protected abstract void handlePaxosMessage(PaxosMessage paxosMessage);
+	public abstract Object register() throws Exception;
 
-    private enum State {
-        WATING, PREPARE, RESPONSE
-    }
+	protected void recoveryExecutor() {
+		executor.shutdown();
+	}
 
-    private class recMessageThread extends Thread {
-
-        @Override
-        public void run() {
-            while (com.panchen.easyPaxos.core.Node.State.WATING != state) {
-                if (null != paxosMessageQueue.peek()) {
-                    handlePaxosMessage(paxosMessageQueue.poll());
-                }
-            }
-        }
-
-    }
 }
