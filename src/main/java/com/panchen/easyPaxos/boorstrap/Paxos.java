@@ -16,14 +16,13 @@ import org.springframework.context.annotation.Configuration;
 import com.google.common.base.Splitter;
 import com.panchen.easyPaxos.core.Client;
 import com.panchen.easyPaxos.core.Cluster;
-import com.panchen.easyPaxos.core.Selector;
 
 @Configuration
 public class Paxos {
 
 	@Autowired
-	private Selector selector;
-
+	private Cluster cluster;
+	
 	@Value("#{easyPaxos.ip}")
 	private String ip;
 
@@ -35,17 +34,24 @@ public class Paxos {
 
 	private Logger logger = LoggerFactory.getLogger(Paxos.class);
 
-	private Cluster cluster;
 
 	@PostConstruct
 	public void init() {
 		logger.info(" hello easyPaxos ! ");
 
 		ip2Node();
-		initSelector();
-		cluster.wake();
+		initCluster();
 	}
-
+	
+	private void initCluster() {
+		cluster.wake();
+		cluster.select();
+	}
+	
+	public boolean proposal(String key,String value) {
+		return cluster.proposal(key,value);
+	}
+	
 	private void ip2Node() {
 		if (null == ip || "".equals(ip) || 0 >= port) {
 			throw new RuntimeException(" check your conf ! ");
@@ -70,8 +76,5 @@ public class Paxos {
 
 	}
 
-	private void initSelector() {
-		cluster.selector = selector;
-	}
 
 }

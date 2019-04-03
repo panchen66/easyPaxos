@@ -8,15 +8,12 @@ import io.netty.buffer.ByteBuf;
 public class Proposal {
 
 	private Long version;
-	private byte[] value;
+	private byte[] content;
 
-	public Proposal(ProposalHead proposalHead) {
-		this.value = Ints.toByteArray(proposalHead.getValue());
+	public Proposal(ProposalHead proposalHead, String key, String value) {
+		this.content = Ints.toByteArray(proposalHead.getValue());
+		this.content = Bytes.concat(content, key.getBytes(), value.getBytes());
 		this.version = System.currentTimeMillis();
-	}
-
-	public void messageContent(String content) {
-		this.value = Bytes.concat(value, content.getBytes());
 	}
 
 	public enum ProposalHead {
@@ -40,4 +37,5 @@ public class Proposal {
 	public boolean validateWake() {
 		return true;
 	}
+
 }

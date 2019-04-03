@@ -3,8 +3,6 @@ package com.panchen.easyPaxos.core;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -17,15 +15,15 @@ public abstract class Node {
 	public static State state = State.WATING;
 	public NettyTransport nettyTransport;
 	public InetSocketAddress inetSocketAddress;
-	private ConcurrentLinkedQueue<Proposal> proposalQueue = new ConcurrentLinkedQueue<Proposal>();
 	protected ThreadPoolExecutor executor;
 	private static final int DEFALUT_COREPOOLSIZE = 1;
-
+	private ConcurrentLinkedQueue<Proposal> proposalQueue = new ConcurrentLinkedQueue<Proposal>();
+	
 	public enum State {
 		WATING, PREPARE, RESPONSE
 	}
 
-	private class recMessageThread extends Thread {
+	private class sendProposalThread extends Thread {
 
 		@Override
 		public void run() {
@@ -58,6 +56,8 @@ public abstract class Node {
 	}
 
 	public abstract Object register() throws Exception;
+
+	public abstract void persistence();
 
 	protected void recoveryExecutor() {
 		executor.shutdown();

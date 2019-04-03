@@ -5,13 +5,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Client extends Node {
+public class Client extends Node implements Acceptor, Proposer, Learner {
 
 	private List<Client> awakenClient = new LinkedList<Client>();
 	private List<Client> waitClient = new ArrayList<Client>();
@@ -71,6 +70,48 @@ public class Client extends Node {
 		});
 		return futureTask.get();
 
+	}
+
+	@Override
+	public void listen() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void learn() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void explicit() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void replyToAcceptor() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void replyToProposer() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void persistence() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean proposal(Proposal proposal, List<Client> accpeters) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

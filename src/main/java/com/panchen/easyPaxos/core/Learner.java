@@ -1,5 +1,7 @@
 package com.panchen.easyPaxos.core;
 
-public class Learner {
+public interface Learner {
+
+	public void learn();
 
 }

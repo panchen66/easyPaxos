@@ -1,5 +1,8 @@
 package com.panchen.easyPaxos.core;
 
-public class Acceptor {
+public interface Acceptor {
 
+	public void listen();
+
+	public void replyToProposer();
 }
