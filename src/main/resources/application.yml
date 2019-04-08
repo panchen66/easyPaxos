@@ -1,4 +1,5 @@
 easyPaxos:
   port: 9999
+  log: /paxos.log
   cluster:
     nodes: 127.0.0.1:9999,127.0.0.1:8888,127.0.0.1:7777

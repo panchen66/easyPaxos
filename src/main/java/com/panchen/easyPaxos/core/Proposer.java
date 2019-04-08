@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface Proposer {
 
-	public boolean proposal(Proposal proposal, List<Client> accpeters);
+	public boolean proposal(PaxosMessage paxosMessage, List<Client> accpeters);
 
 	public void explicit();
 

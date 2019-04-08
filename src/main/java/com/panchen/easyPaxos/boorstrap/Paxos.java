@@ -43,8 +43,8 @@ public class Paxos {
 		initCluster();
 	}
 	
+	
 	private void initCluster() {
-		cluster.wake();
 		cluster.select();
 	}
 	
