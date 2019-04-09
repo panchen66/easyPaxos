@@ -52,9 +52,28 @@ public class DefalutFilePersistent implements FilePersistent {
 	}
 
 	@Override
-	public PaxosMessage deserialize() {
-		// TODO Auto-generated method stub
+	public byte[] deserialize() {
+		lock.readLock().lock();
+		if (null == fileChannel) {
+			return null;
+		}
+		ByteBuffer buf = ByteBuffer.allocate(offset);
+		int bytesRead = 0;
+		try {
+			bytesRead = fileChannel.read(buf);
+		} catch (IOException e) {
+			return null;
+		}
+		if (bytesRead != offset) {
+			return buf.array();
+		}
 		return null;
+	}
+
+	@Override
+	public void persistent(PaxosMessage paxosMessage) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

@@ -24,7 +24,7 @@ public class Cluster {
 	}
 
 	public boolean proposal(String key, String value) {
-		return local.proposal(new PaxosMessage(PaxosMHead.P2A, key, value), acceptors);
+		return local.proposal(new PaxosMessage(PaxosMHead.PROPOSER_PROPOSE, key, value), acceptors);
 
 	}
 

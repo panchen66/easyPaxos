@@ -50,19 +50,27 @@ public class NettyTransport {
 						PaxosMessage paxosMessage = PaxosMessage.ByteBuf2Proposal((ByteBuf) msg);
 						PaxosMHead paxosMHead = paxosMessage.getHead();
 
+						// acceptor
 						// listen proposal
 						if (paxosMHead.equals(PaxosMHead.PROPOSER_PROPOSE)) {
-							client.handlePropose(ctx, paxosMessage);
+							client.handleProposal(ctx, paxosMessage);
 						}
-						
+
 						// listen confirm
 						if (paxosMHead.equals(PaxosMHead.PROPOSER_CONFIRM)) {
-
+							client.handleConfirm(ctx, paxosMessage);
 						}
 
-						// get replyToAcceptor
+						// proposer
+						// listen proposal reply
+						if (paxosMHead.equals(PaxosMHead.ACCEPTOR_REPLYAPPROVAL)) {
+							client.handleReplyProposal(ctx, paxosMessage);
+						}
 
-						//
+						// listen confirm reply
+						if (paxosMHead.equals(PaxosMHead.ACCEPTOR_REPLYCONFIRM)) {
+							client.handleReplyConfirm(ctx, paxosMessage);
+						}
 					}
 
 				});
@@ -84,6 +92,16 @@ public class NettyTransport {
 						PaxosMessage paxosMessage = PaxosMessage.ByteBuf2Proposal((ByteBuf) msg);
 						PaxosMHead paxosMHead = paxosMessage.getHead();
 
+						// proposer
+						// listen proposal reply
+						if (paxosMHead.equals(PaxosMHead.ACCEPTOR_REPLYAPPROVAL)) {
+							client.handleReplyProposal(ctx, paxosMessage);
+						}
+
+						// listen confirm reply
+						if (paxosMHead.equals(PaxosMHead.ACCEPTOR_REPLYCONFIRM)) {
+							client.handleReplyConfirm(ctx, paxosMessage);
+						}
 					}
 
 				});

@@ -4,15 +4,21 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.panchen.easyPaxos.core.PaxosMessage.PaxosMHead;
+import com.panchen.easyPaxos.future.PaxosFutrueTask;
 import com.panchen.easyPaxos.persistence.FilePersistent;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
 @Component
@@ -21,18 +27,41 @@ public class Client extends Node implements Acceptor, Proposer, Learner {
 	@Autowired
 	FilePersistent filePersistent;
 
-	private List<Client> awakenClient = new LinkedList<Client>();
-	private List<Client> waitClient = new ArrayList<Client>();
+	private List<Client> acceptor;
 
 	private static final int WAKE_RETRY_TIMES = 3;
 	private static final int WAKE_TIMEOUT = 1000;
 
 	// acceptor
-	private volatile Long lastVersion;
-	private volatile 
-	
+	private volatile Long acceptorVersion;
+
+	// proposer
+	private volatile Long proposerVersion;
+	private AtomicInteger proposerCount;
+	private AtomicInteger confirmCount;
+	private List<Client> votedAcceptor;
+	private List<Client> confirmAcceptor;
+
 	public Client(InetSocketAddress inetSocketAddress) {
 		super.inetSocketAddress = inetSocketAddress;
+	}
+
+	public class PaxosTaskHandler extends Thread {
+
+		private BlockingQueue<PaxosFutrueTask> taskQueue;
+		private ThreadPoolExecutor executor;
+
+		PaxosTaskHandler(BlockingQueue<PaxosFutrueTask> taskQueue, ThreadPoolExecutor executor) {
+			this.taskQueue = taskQueue;
+			this.executor = executor;
+		}
+
+		public void run() {
+			while (null != taskQueue.peek()) {
+				Future<?> future = executor.submit(taskQueue.poll());
+			}
+		}
+
 	}
 
 	@Override
@@ -49,31 +78,6 @@ public class Client extends Node implements Acceptor, Proposer, Learner {
 
 	}
 
-	public Object registerWake() throws Exception {
-		if (null == executor) {
-			throw new RuntimeException(" executor is null ！");
-		}
-		FutureTask<List<Client>> futureTask = new FutureTask<List<Client>>(new Callable<List<Client>>() {
-
-			@Override
-			public List<Client> call() throws Exception {
-				while (com.panchen.easyPaxos.core.Node.State.WATING != state) {
-					for (int i = 1; i <= WAKE_RETRY_TIMES; i++) {
-						Thread.sleep(WAKE_TIMEOUT * i);
-						if (0 == awakenClient.size()) {
-							return waitClient;
-						}
-					}
-					return waitClient;
-				}
-				return null;
-			}
-
-		});
-		return futureTask.get();
-
-	}
-
 	@Override
 	public void learn() {
 		// TODO Auto-generated method stub
@@ -81,30 +85,11 @@ public class Client extends Node implements Acceptor, Proposer, Learner {
 	}
 
 	@Override
-	public void explicit() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void replyToAcceptor() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void persistence() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public boolean proposal(PaxosMessage paxosMessage, List<Client> accpeters) {
 		// send proposal
-		for (Client c : accpeters) {
+		for (Client accpeter : accpeters) {
+			nettyTransport.send(accpeter.inetSocketAddress, paxosMessage);
 		}
-
-		// register
 
 		return false;
 	}
@@ -122,17 +107,51 @@ public class Client extends Node implements Acceptor, Proposer, Learner {
 
 	@Override
 	public void handleProposal(ChannelHandlerContext ctx, PaxosMessage paxosMessage) {
-		if (paxosMessage.version() <= lastVersion) {
+		if (acceptorVersion >= paxosMessage.version()) {
 			return;
 		}
 		if (filePersistent.serialize(paxosMessage)) {
-			lastVersion = paxosMessage.version();
+			acceptorVersion = paxosMessage.version();
+			paxosMessage.head(PaxosMHead.ACCEPTOR_REPLYAPPROVAL);
 			nettyTransport.send(ctx, paxosMessage);
 		}
 	}
 
 	@Override
 	public void handleConfirm(ChannelHandlerContext ctx, PaxosMessage paxosMessage) {
+		if (acceptorVersion > paxosMessage.version()) {
+			nettyTransport.send(ctx, new PaxosMessage(filePersistent.deserialize()));
+		} else {
+			paxosMessage.head(PaxosMHead.ACCEPTOR_REPLYCONFIRM);
+			nettyTransport.send(ctx, paxosMessage);
+		}
+
+	}
+
+	@Override
+	public void handleReplyProposal(ChannelHandlerContext ctx, PaxosMessage paxosMessage) {
+		if (proposerVersion == paxosMessage.version()) {
+			proposerCount.incrementAndGet();
+		}
+		if (proposerCount.intValue() >= acceptor.size() / 2 + 1) {
+			confirm(paxosMessage, acceptor);
+		}
+	}
+
+	@Override
+	public void handleReplyConfirm(ChannelHandlerContext ctx, PaxosMessage paxosMessage) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean confirm(PaxosMessage paxosMessage, List<Client> accpeters) {
+		for (Client accpeter : accpeters) {
+			nettyTransport.send(accpeter.inetSocketAddress, paxosMessage);
+		}
+
+		//
+		return false;
 	}
 
 }

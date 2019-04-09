@@ -9,12 +9,21 @@ import io.netty.buffer.ByteBuf;
 public class PaxosMessage {
 
 	private Long version;
-	private byte[] content;
+	private byte[] content = new byte[] {};
 
 	public PaxosMessage(PaxosMHead proposalHead, String key, String value) {
 		this.content = Ints.toByteArray(proposalHead.getValue());
 		this.content = Bytes.concat(content, key.getBytes(), value.getBytes());
 		this.version = System.currentTimeMillis();
+	}
+
+	public PaxosMessage(byte[] content) {
+		this.content = content;
+	}
+
+	public PaxosMessage(PaxosMHead proposalHead, byte[] v) {
+		append(proposalHead);
+		content = Bytes.concat(content, v);
 	}
 
 	public enum PaxosMHead {
@@ -23,11 +32,12 @@ public class PaxosMessage {
 
 		PROPOSER_CONFIRM(2),
 
-		ACCEPTOR_REPLYCONFIRM(3),
-
 		PROPOSER_REPLYACCEPTORCONFIRM(4),
 
-		ACCEPTOR_APPROVAL(5);
+		ACCEPTOR_REPLYAPPROVAL(5),
+		
+		ACCEPTOR_REPLYCONFIRM(3);
+
 
 		private int v;
 
@@ -57,6 +67,13 @@ public class PaxosMessage {
 		return PaxosMHead.getHeadByV(Ints.fromBytes(content[0], content[1], content[2], content[3]));
 	}
 
+	public void head(PaxosMHead paxosMHead) {
+		byte[] v = new byte[content.length - 1];
+		v = Bytes.concat(v, Ints.toByteArray(paxosMHead.getValue()));
+		System.arraycopy(content, 3, v, 3, content.length - 4);
+		content = v;
+	}
+
 	public Long version() {
 		return Longs.fromBytes(content[4], content[5], content[6], content[7], content[8], content[9], content[10],
 				content[11]);
@@ -66,4 +83,19 @@ public class PaxosMessage {
 		return content.length;
 	}
 
+	public void append(PaxosMHead paxosMHead) {
+		content = Bytes.concat(content, Ints.toByteArray(paxosMHead.getValue()));
+	}
+
+	public void append(int v) {
+		content = Bytes.concat(content, Ints.toByteArray(v));
+	}
+
+	public void clearV() {
+		System.arraycopy(content, 0, content, 0, 12);
+	}
+
+	public void clear() {
+		content = new byte[] {};
+	}
 }

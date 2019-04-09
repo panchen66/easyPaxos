@@ -4,7 +4,7 @@ import java.util.concurrent.Callable;
 
 import com.panchen.easyPaxos.core.PaxosMessage;
 
-public class PaxosCallable<Boolean> implements Callable<Boolean> {
+public abstract class PaxosCallable implements Callable<Boolean> {
 
 	private PaxosMessage paxosMessage;
 
@@ -14,7 +14,9 @@ public class PaxosCallable<Boolean> implements Callable<Boolean> {
 
 	@Override
 	public Boolean call() throws Exception {
-		return (Boolean) paxosMessage.process();
+		return process();
 	}
+
+	protected abstract Boolean process();
 
 }

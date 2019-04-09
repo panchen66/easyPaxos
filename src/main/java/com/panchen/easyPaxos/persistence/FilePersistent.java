@@ -6,6 +6,7 @@ public interface FilePersistent {
 
 	public boolean serialize(PaxosMessage paxosMessage);
 
-	public PaxosMessage deserialize();
+	public byte[] deserialize();
 
+	public void persistent(PaxosMessage paxosMessage);
 }

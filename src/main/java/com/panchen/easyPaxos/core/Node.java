@@ -2,9 +2,11 @@ package com.panchen.easyPaxos.core;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.panchen.easyPaxos.future.PaxosFutrueTask;
 import com.panchen.easyPaxos.transport.NettyTransport;
 
 public abstract class Node {
@@ -13,23 +15,16 @@ public abstract class Node {
 	public NettyTransport nettyTransport;
 	public InetSocketAddress inetSocketAddress;
 	protected ThreadPoolExecutor executor;
-	private static final int DEFALUT_COREPOOLSIZE = 1;
-	
+	public static BlockingQueue<PaxosFutrueTask> proposerTaskQueue = new ArrayBlockingQueue<PaxosFutrueTask>(1024);
+	public static BlockingQueue<PaxosFutrueTask> confirmTaskQueue = new ArrayBlockingQueue<PaxosFutrueTask>(1024);
+
 	public enum State {
 		WATING, PREPARE, RESPONSE
 	}
 
-
-	public void initThreadPoolExecutor(int corePoolSize) {
-		if (0 >= corePoolSize) {
-			executor = new ThreadPoolExecutor(DEFALUT_COREPOOLSIZE, DEFALUT_COREPOOLSIZE * 2, 30, TimeUnit.MINUTES,
-					new ArrayBlockingQueue<Runnable>(10));
-		}
-		executor = new ThreadPoolExecutor(corePoolSize, corePoolSize * 2, 30, TimeUnit.MINUTES,
-				new ArrayBlockingQueue<Runnable>(10));
+	public void initThreadPoolExecutor(int size) {
+		executor = new ThreadPoolExecutor(size, size, 30, TimeUnit.MINUTES, new ArrayBlockingQueue<Runnable>(10));
 	}
-
-	public abstract void persistence();
 
 	protected void recoveryExecutor() {
 		executor.shutdown();
