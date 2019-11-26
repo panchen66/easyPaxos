@@ -4,8 +4,8 @@ import java.util.concurrent.FutureTask;
 
 public class PaxosFutrueTask extends FutureTask<Boolean> {
 
-	public PaxosFutrueTask(PaxosCallable paxosCallable) {
-		super(paxosCallable);
-	}
+    public PaxosFutrueTask(PaxosCallable paxosCallable) {
+        super(paxosCallable);
+    }
 
 }

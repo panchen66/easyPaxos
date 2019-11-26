@@ -3,31 +3,29 @@ package com.panchen.easyPaxos.core;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import com.panchen.easyPaxos.future.PaxosFutrueTask;
 import com.panchen.easyPaxos.transport.NettyTransport;
+import java.util.concurrent.TimeUnit;
 
 public abstract class Node {
 
-	public static State state = State.WATING;
-	public NettyTransport nettyTransport;
-	public InetSocketAddress inetSocketAddress;
-	protected ThreadPoolExecutor executor;
-	public static BlockingQueue<PaxosFutrueTask> proposerTaskQueue = new ArrayBlockingQueue<PaxosFutrueTask>(1024);
-	public static BlockingQueue<PaxosFutrueTask> confirmTaskQueue = new ArrayBlockingQueue<PaxosFutrueTask>(1024);
+    public static NodeState state = NodeState.WATING;
 
-	public enum State {
-		WATING, PREPARE, RESPONSE
-	}
+    public NettyTransport nettyTransport;
+    public InetSocketAddress inetSocketAddress;
 
-	public void initThreadPoolExecutor(int size) {
-		executor = new ThreadPoolExecutor(size, size, 30, TimeUnit.MINUTES, new ArrayBlockingQueue<Runnable>(10));
-	}
+    protected ThreadPoolExecutor executor = new ThreadPoolExecutor(1,
+        1,
+        10, TimeUnit.SECONDS,
+        new SynchronousQueue<>());
 
-	protected void recoveryExecutor() {
-		executor.shutdown();
-	}
+    public static BlockingQueue<PaxosFutrueTask> proposerTaskQueue = new ArrayBlockingQueue<PaxosFutrueTask>(
+        1024);
+
+    public static BlockingQueue<PaxosFutrueTask> confirmTaskQueue = new ArrayBlockingQueue<PaxosFutrueTask>(
+        1024);
 
 }

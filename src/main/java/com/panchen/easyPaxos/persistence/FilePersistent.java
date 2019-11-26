@@ -4,9 +4,9 @@ import com.panchen.easyPaxos.core.PaxosMessage;
 
 public interface FilePersistent {
 
-	public boolean serialize(PaxosMessage paxosMessage);
+    public boolean serialize(PaxosMessage paxosMessage);
 
-	public byte[] deserialize();
+    public byte[] deserialize();
 
-	public void persistent(PaxosMessage paxosMessage);
+    public void persistent(PaxosMessage paxosMessage);
 }

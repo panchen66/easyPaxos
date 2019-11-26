@@ -1,7 +1,5 @@
 package com.panchen.easyPaxos.future;
 
-import com.panchen.easyPaxos.core.PaxosMessage;
-
 public class ConfirmCallable extends PaxosCallable{
 
 	public ConfirmCallable(PaxosMessage paxosMessage) {
