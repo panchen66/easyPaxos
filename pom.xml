@@ -10,7 +10,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <guava-version>27.1-jre</guava-version>
+    <guava-version>29.0-jre</guava-version>
     <netty-all.version>4.1.32.Final</netty-all.version>
     <lombok.version>1.18.10</lombok.version>
   </properties>
